@@ -1,16 +1,18 @@
 package el
 
 type ELClientContext struct {
-	enr string
-	enode string
-	ipAddr string
-	rpcPortNum  uint16
-	wsPortNum uint16
-	miningWaiter ELClientMiningWaiter
+	enr            string
+	enode          string
+	ipAddr         string
+	rpcPortNum     uint16
+	authRpcPortNum uint16
+	wsPortNum      uint16
+	authWsPortNum  uint16
+	miningWaiter   ELClientMiningWaiter
 }
 
-func NewELClientContext(enr string, enode string, ipAddr string, rpcPortNum uint16, wsPortNum uint16, miningWaiter ELClientMiningWaiter) *ELClientContext {
-	return &ELClientContext{enr: enr, enode: enode, ipAddr: ipAddr, rpcPortNum: rpcPortNum, wsPortNum: wsPortNum, miningWaiter: miningWaiter}
+func NewELClientContext(enr string, enode string, ipAddr string, rpcPortNum uint16, authRpcPortNum uint16, wsPortNum uint16, authWsPortNum uint16, miningWaiter ELClientMiningWaiter) *ELClientContext {
+	return &ELClientContext{enr: enr, enode: enode, ipAddr: ipAddr, rpcPortNum: rpcPortNum, authRpcPortNum: authRpcPortNum, wsPortNum: wsPortNum, authWsPortNum: authWsPortNum, miningWaiter: miningWaiter}
 }
 
 func (ctx *ELClientContext) GetENR() string {
@@ -25,10 +27,15 @@ func (ctx *ELClientContext) GetIPAddress() string {
 func (ctx *ELClientContext) GetRPCPortNum() uint16 {
 	return ctx.rpcPortNum
 }
+func (ctx *ELClientContext) GetAuthRPCPortNum() uint16 {
+	return ctx.authRpcPortNum
+}
 func (ctx *ELClientContext) GetWSPortNum() uint16 {
 	return ctx.wsPortNum
+}
+func (ctx *ELClientContext) GetAuthWSPortNum() uint16 {
+	return ctx.authWsPortNum
 }
 func (ctx *ELClientContext) GetMiningWaiter() ELClientMiningWaiter {
 	return ctx.miningWaiter
 }
-

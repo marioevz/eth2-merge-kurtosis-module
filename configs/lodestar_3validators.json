@@ -1,0 +1,41 @@
+{
+    "participants": [
+        {
+            "elType": "geth",
+            "elImage": "parithoshj/geth:merge-876ca42",
+            "elExtraParams": [],
+            "clType": "lodestar",
+            "clImage": "",
+            "clLogLevel": "",
+            "beaconExtraParams": [],
+            "validatorExtraParams": []
+        },
+        {
+            "elType": "geth",
+            "elImage": "parithoshj/geth:merge-876ca42",
+            "elExtraParams": [],
+            "clType": "lodestar",
+            "clImage": "",
+            "clLogLevel": "",
+            "beaconExtraParams": [],
+            "validatorExtraParams": []
+        },
+        {
+            "elType": "geth",
+            "elImage": "parithoshj/geth:merge-876ca42",
+            "elExtraParams": [],
+            "clType": "lodestar",
+            "clImage": "",
+            "clLogLevel": "",
+            "beaconExtraParams": [],
+            "validatorExtraParams": []
+        }
+    ],
+
+    "network": {
+		"totalTerminalDifficulty": 50000000,
+"mergeForkEpoch": 3
+    },
+
+    "logLevel": "info"
+}

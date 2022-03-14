@@ -1,0 +1,41 @@
+{
+    "participants": [
+        {
+            "elType": "geth",
+            "elImage": "parithoshj/geth:merge-876ca42",
+            "elExtraParams": [],
+            "clType": "prysm",
+            "clImage": "gcr.io/prysmaticlabs/prysm/beacon-chain:kiln-ee1ee6,gcr.io/prysmaticlabs/prysm/validator:kiln-ee1ee6",
+            "clLogLevel": "",
+            "beaconExtraParams": [],
+            "validatorExtraParams": []
+        },
+        {
+            "elType": "geth",
+            "elImage": "parithoshj/geth:merge-876ca42",
+            "elExtraParams": [],
+            "clType": "prysm",
+            "clImage": "gcr.io/prysmaticlabs/prysm/beacon-chain:kiln-ee1ee6,gcr.io/prysmaticlabs/prysm/validator:kiln-ee1ee6",
+            "clLogLevel": "",
+            "beaconExtraParams": [],
+            "validatorExtraParams": []
+        },
+        {
+            "elType": "geth",
+            "elImage": "parithoshj/geth:merge-876ca42",
+            "elExtraParams": [],
+            "clType": "prysm",
+            "clImage": "gcr.io/prysmaticlabs/prysm/beacon-chain:kiln-ee1ee6,gcr.io/prysmaticlabs/prysm/validator:kiln-ee1ee6",
+            "clLogLevel": "",
+            "beaconExtraParams": [],
+            "validatorExtraParams": []
+        }
+    ],
+
+    "network": {
+		"totalTerminalDifficulty": 50000000,
+"mergeForkEpoch": 3
+    },
+
+    "logLevel": "info"
+}

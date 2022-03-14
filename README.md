@@ -49,8 +49,8 @@ To configure the module behaviour, you can modify your `eth2-module-params.json`
 
             // The Docker image that should be used for the EL client; leave blank to use the default for the client type
             // Defaults by client:
-            // - geth: parithoshj/geth:merge-f72c361"
-            // - nethermind: nethermindeth/nethermind:kintsugi_0.5
+            // - geth: parithoshj/geth:merge-876ca42"
+            // - nethermind: nethermindeth/nethermind:kiln_0.6
             // - besu: hyperledger/besu:merge
             "elImage": "",
 

@@ -2,21 +2,23 @@ package prysm
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
+	"strings"
+	"time"
+
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/module_io"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/cl"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/cl/cl_client_rest_client"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/el"
 	cl2 "github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/prelaunch_data_generator/cl_validator_keystores"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/service_launch_utils"
+	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/static_files"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/enclaves"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/services"
 	"github.com/kurtosis-tech/stacktrace"
 	recursive_copy "github.com/otiai10/copy"
-	"io/ioutil"
-	"os"
-	"path"
-	"strings"
-	"time"
 )
 
 const (
@@ -236,6 +238,17 @@ func (launcher *PrysmCLClientLauncher) getBeaconContainerConfigSupplier(
 			)
 		}
 
+		jwtPath, err := static_files.CopyJWTFileToSharedDir(sharedDir)
+		if err != nil {
+			return nil, err
+		}
+
+		execClientRpcUrlStr := fmt.Sprintf(
+			"http://%v:%v",
+			elClientContext.GetIPAddress(),
+			elClientContext.GetAuthRPCPortNum(),
+		)
+
 		elClientRpcUrlStr := fmt.Sprintf(
 			"http://%v:%v",
 			elClientContext.GetIPAddress(),
@@ -249,8 +262,9 @@ func (launcher *PrysmCLClientLauncher) getBeaconContainerConfigSupplier(
 			"--chain-config-file=" + genesisConfigYmlSharedPath.GetAbsPathOnServiceContainer(),
 			"--genesis-state=" + genesisSszSharedPath.GetAbsPathOnServiceContainer(),
 			"--http-web3provider=" + elClientRpcUrlStr,
-			"--execution-provider=" + elClientRpcUrlStr,
+			"--execution-provider=" + execClientRpcUrlStr,
 			"--http-modules=prysm,eth",
+			fmt.Sprintf("--jwt-secret=%s", jwtPath),
 			"--rpc-host=" + privateIpAddr,
 			fmt.Sprintf("--rpc-port=%v", rpcPortNum),
 			"--grpc-gateway-host=0.0.0.0",

@@ -2,17 +2,19 @@ package lodestar
 
 import (
 	"fmt"
+	"path"
+	"time"
+
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/module_io"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/cl"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/cl/cl_client_rest_client"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/el"
 	cl2 "github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/prelaunch_data_generator/cl_validator_keystores"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/service_launch_utils"
+	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/static_files"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/enclaves"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/services"
 	"github.com/kurtosis-tech/stacktrace"
-	"path"
-	"time"
 )
 
 const (
@@ -22,7 +24,7 @@ const (
 	tcpDiscoveryPortID = "tcpDiscovery"
 	udpDiscoveryPortID = "udpDiscovery"
 	httpPortID         = "http"
-	metricsPortID 	   = "metrics"
+	metricsPortID      = "metrics"
 
 	// Port nums
 	discoveryPortNum uint16 = 9000
@@ -186,6 +188,17 @@ func (launcher *LodestarClientLauncher) getBeaconContainerConfigSupplier(
 			elClientContext.GetRPCPortNum(),
 		)
 
+		execClientRpcUrlStr := fmt.Sprintf(
+			"http://%v:%v",
+			elClientContext.GetIPAddress(),
+			elClientContext.GetAuthRPCPortNum(),
+		)
+
+		jwtPath, err := static_files.CopyJWTFileToSharedDir(sharedDir)
+		if err != nil {
+			return nil, err
+		}
+
 		cmdArgs := []string{
 			"beacon",
 			"--logLevel=" + logLevel,
@@ -199,7 +212,8 @@ func (launcher *LodestarClientLauncher) getBeaconContainerConfigSupplier(
 			"--eth1.enabled=true",
 			"--eth1.disableEth1DepositDataTracker=true",
 			"--eth1.providerUrls=" + elClientRpcUrlStr,
-			"--execution.urls=" + elClientRpcUrlStr,
+			"--execution.urls=" + execClientRpcUrlStr,
+			fmt.Sprintf("--jwt-secret=%s", jwtPath),
 			"--api.rest.enabled=true",
 			"--api.rest.host=0.0.0.0",
 			"--api.rest.api=*",

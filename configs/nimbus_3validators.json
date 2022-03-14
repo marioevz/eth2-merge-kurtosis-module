@@ -1,0 +1,41 @@
+{
+    "participants": [
+        {
+            "elType": "geth",
+            "elImage": "parithoshj/geth:merge-876ca42",
+            "elExtraParams": [],
+            "clType": "nimbus",
+            "clImage": "parithoshj/nimbus:merge-a35c5f8",
+            "clLogLevel": "",
+            "beaconExtraParams": [],
+            "validatorExtraParams": []
+        },
+        {
+            "elType": "geth",
+            "elImage": "parithoshj/geth:merge-876ca42",
+            "elExtraParams": [],
+            "clType": "nimbus",
+            "clImage": "parithoshj/nimbus:merge-a35c5f8",
+            "clLogLevel": "",
+            "beaconExtraParams": [],
+            "validatorExtraParams": []
+        },
+        {
+            "elType": "geth",
+            "elImage": "parithoshj/geth:merge-876ca42",
+            "elExtraParams": [],
+            "clType": "nimbus",
+            "clImage": "parithoshj/nimbus:merge-a35c5f8",
+            "clLogLevel": "",
+            "beaconExtraParams": [],
+            "validatorExtraParams": []
+        }
+    ],
+
+    "network": {
+		"totalTerminalDifficulty": 50000000,
+        "mergeForkEpoch": 3
+    },
+
+    "logLevel": "info"
+}

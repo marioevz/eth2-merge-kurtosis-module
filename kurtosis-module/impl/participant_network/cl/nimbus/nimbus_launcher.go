@@ -2,17 +2,19 @@ package nimbus
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/module_io"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/cl"
 	cl_client_rest_client2 "github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/cl/cl_client_rest_client"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/el"
 	cl2 "github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/prelaunch_data_generator/cl_validator_keystores"
+	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/static_files"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/enclaves"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/services"
 	"github.com/kurtosis-tech/stacktrace"
 	recursive_copy "github.com/otiai10/copy"
-	"strings"
-	"time"
 )
 
 const (
@@ -54,7 +56,6 @@ const (
 	timeBetweenHealthcheckRetries = 1 * time.Second
 
 	metricsPath = "/metrics"
-
 )
 
 var usedPorts = map[string]*services.PortSpec{
@@ -183,8 +184,13 @@ func (launcher *NimbusLauncher) getContainerConfigSupplier(
 		elClientWsUrlStr := fmt.Sprintf(
 			"ws://%v:%v",
 			elClientContext.GetIPAddress(),
-			elClientContext.GetWSPortNum(),
+			elClientContext.GetAuthWSPortNum(),
 		)
+
+		jwtPath, err := static_files.CopyJWTFileToSharedDir(sharedDir)
+		if err != nil {
+			return nil, err
+		}
 
 		validatorKeysSharedPath := sharedDir.GetChildPath(validatorKeysDirpathRelToSharedDirRoot)
 		if err := recursive_copy.Copy(validatorKeysDirpathOnModuleContainer, validatorKeysSharedPath.GetAbsPathOnThisContainer()); err != nil {
@@ -240,6 +246,7 @@ func (launcher *NimbusLauncher) getContainerConfigSupplier(
 			fmt.Sprintf("--rest-port=%v", httpPortNum),
 			"--validators-dir=" + validatorKeysDirpathOnServiceContainer,
 			"--secrets-dir=" + validatorSecretsDirpathOnServiceContainer,
+			"--jwt-secret=" + jwtPath,
 			// There's a bug where if we don't set this flag, the Nimbus nodes won't work:
 			// https://discord.com/channels/641364059387854899/674288681737256970/922890280120750170
 			// https://github.com/status-im/nimbus-eth2/issues/2451

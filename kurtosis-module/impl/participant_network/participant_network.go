@@ -2,6 +2,9 @@ package participant_network
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/external_miner"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/module_io"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/cl"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/cl/lighthouse"
@@ -20,7 +23,6 @@ import (
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/services"
 	"github.com/kurtosis-tech/stacktrace"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
 const (
@@ -159,6 +161,11 @@ func LaunchParticipantNetwork(
 		logrus.Infof("Added EL client %v of type '%v'", idx, elClientType)
 	}
 	logrus.Infof("Successfully added %v EL clients", numParticipants)
+
+	if err := external_miner.LaunchExternalMiner(enclaveCtx, allElClientContexts, networkParams.TotalTerminalDifficulty); err != nil {
+		return nil, 0, stacktrace.Propagate(err, "An error occurred launching the external miner")
+	}
+	logrus.Info("Successfully launched external miner")
 
 	if shouldWaitForMining {
 		// Wait for all EL clients to start mining before we proceed with adding the CL clients

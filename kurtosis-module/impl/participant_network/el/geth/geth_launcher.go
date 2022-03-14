@@ -2,24 +2,28 @@ package geth
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"strings"
+	"time"
+
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/module_io"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/el"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/el/el_rest_client"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/el/mining_waiter"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/prelaunch_data_generator/genesis_consts"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/service_launch_utils"
+	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/static_files"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/enclaves"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/services"
 	"github.com/kurtosis-tech/stacktrace"
-	"os"
-	"path"
-	"strings"
-	"time"
 )
 
 const (
 	rpcPortNum       uint16 = 8545
 	wsPortNum        uint16 = 8546
+	authRpcPortNum   uint16 = 8550
+	authWsPortNum    uint16 = 8551
 	discoveryPortNum uint16 = 30303
 
 	// Port IDs
@@ -33,7 +37,8 @@ const (
 	miningRewardsAccount = "0x0000000000000000000000000000000000000001"
 
 	// TODO Scale this dynamically based on CPUs available and Geth nodes mining
-	numMiningThreads = 1
+	// numMiningThreads = 1
+	numMiningThreads = 0
 
 	// The filepath of the genesis JSON file in the shared directory, relative to the shared directory root
 	sharedGenesisJsonRelFilepath = "genesis.json"
@@ -122,7 +127,9 @@ func (launcher *GethELClientLauncher) Launch(
 		nodeInfo.Enode,
 		serviceCtx.GetPrivateIPAddress(),
 		rpcPortNum,
+		authRpcPortNum,
 		wsPortNum,
+		authWsPortNum,
 		miningWaiter,
 	)
 
@@ -164,6 +171,11 @@ func (launcher *GethELClientLauncher) getContainerConfigSupplier(
 			accountAddressesToUnlock = append(accountAddressesToUnlock, prefundedAccount.Address)
 		}
 
+		jwtPath, err := static_files.CopyJWTFileToSharedDir(sharedDir)
+		if err != nil {
+			return nil, err
+		}
+
 		initDatadirCmdStr := fmt.Sprintf(
 			"geth init --datadir=%v %v",
 			executionDataDirpathOnClientContainer,
@@ -196,13 +208,17 @@ func (launcher *GethELClientLauncher) getContainerConfigSupplier(
 			"--networkid=" + networkId,
 			"--http",
 			"--http.addr=0.0.0.0",
+			"--http.corsdomain=*",
 			// WARNING: The admin info endpoint is enabled so that we can easily get ENR/enode, which means
 			//  that users should NOT store private information in these Kurtosis nodes!
 			"--http.api=admin,engine,net,eth",
+			"--authrpc.host=0.0.0.0",
+			fmt.Sprintf("--authrpc.port=%d", authRpcPortNum),
+			fmt.Sprintf("--authrpc.jwtsecret=%s", jwtPath),
 			"--ws",
 			"--ws.addr=0.0.0.0",
-			fmt.Sprintf("--ws.port=%v", wsPortNum),
-			"--ws.api=engine,net,eth",
+			fmt.Sprintf("--ws.port=%v", authWsPortNum),
+			"--ws.api=engine,eth,web3,net,debug",
 			"--allow-insecure-unlock",
 			"--nat=extip:" + privateIpAddr,
 			"--verbosity=" + verbosityLevel,

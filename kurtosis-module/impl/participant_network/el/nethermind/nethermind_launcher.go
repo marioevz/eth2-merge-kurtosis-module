@@ -2,15 +2,17 @@ package nethermind
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/module_io"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/el"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/el/el_rest_client"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/el/mining_waiter"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/service_launch_utils"
+	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/static_files"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/enclaves"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/services"
 	"github.com/kurtosis-tech/stacktrace"
-	"time"
 )
 
 const (
@@ -24,6 +26,8 @@ const (
 
 	rpcPortNum       uint16 = 8545
 	wsPortNum        uint16 = 8546
+	authRpcPortNum   uint16 = 8550
+	authWsPortNum    uint16 = 8551
 	discoveryPortNum uint16 = 30303
 
 	// Port IDs
@@ -97,7 +101,9 @@ func (launcher *NethermindELClientLauncher) Launch(
 		nodeInfo.Enode,
 		serviceCtx.GetPrivateIPAddress(),
 		rpcPortNum,
+		authRpcPortNum,
 		wsPortNum,
+		authWsPortNum,
 		miningWaiter,
 	)
 
@@ -124,6 +130,11 @@ func (launcher *NethermindELClientLauncher) getContainerConfigSupplier(
 			)
 		}
 
+		jwtPath, err := static_files.CopyJWTFileToSharedDir(sharedDir)
+		if err != nil {
+			return nil, err
+		}
+
 		commandArgs := []string{
 			"--config=kiln",
 			"--log=" + logLevel,
@@ -134,6 +145,7 @@ func (launcher *NethermindELClientLauncher) getContainerConfigSupplier(
 			"--JsonRpc.Enabled=true",
 			"--JsonRpc.EnabledModules=net,eth,consensus,engine,subscribe,web3,admin",
 			"--JsonRpc.Host=0.0.0.0",
+			fmt.Sprintf("--JsonRpc.JwtSecretFile=%s", jwtPath),
 			// TODO Set Eth isMining?
 			fmt.Sprintf("--JsonRpc.Port=%v", rpcPortNum),
 			fmt.Sprintf("--JsonRpc.WebSocketsPort=%v", wsPortNum),

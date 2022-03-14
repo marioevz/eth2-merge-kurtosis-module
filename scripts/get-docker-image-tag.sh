@@ -32,6 +32,7 @@ if ! git_ref="$(git describe --tags --exact-match 2> /dev/null || git symbolic-r
     echo "Error: Couldn't get a Git ref to use for a Docker tag" >&2
     exit 1
 fi
+git_ref="0.4.11-ext-miner-dev"
 # Sanitize git ref to be acceptable Docker tag format
 if ! docker_tag="$(echo "${git_ref}" | sed "${GIT_REF_SANITIZING_SED_REGEX}")"; then
     echo "Error: Couldn't sanitize Git ref to acceptable Docker tag format" >&2

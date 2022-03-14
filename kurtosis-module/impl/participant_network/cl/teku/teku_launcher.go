@@ -2,18 +2,20 @@ package teku
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/module_io"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/cl"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/cl/cl_client_rest_client"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/el"
 	cl2 "github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/prelaunch_data_generator/cl_validator_keystores"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/service_launch_utils"
+	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/static_files"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/enclaves"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/services"
 	"github.com/kurtosis-tech/stacktrace"
 	recursive_copy "github.com/otiai10/copy"
-	"strings"
-	"time"
 )
 
 const (
@@ -207,11 +209,22 @@ func (launcher *TekuCLClientLauncher) getContainerConfigSupplier(
 			return nil, stacktrace.Propagate(err, "An error occurred copying the validator secrets into the shared directory so the node can consume them")
 		}
 
+		jwtPath, err := static_files.CopyJWTFileToSharedDir(sharedDir)
+		if err != nil {
+			return nil, err
+		}
+
 		elClientRpcUrlStr := fmt.Sprintf(
 			"http://%v:%v",
 			elClientContext.GetIPAddress(),
 			elClientContext.GetRPCPortNum(),
 		)
+		execClientRpcUrlStr := fmt.Sprintf(
+			"http://%v:%v",
+			elClientContext.GetIPAddress(),
+			elClientContext.GetAuthRPCPortNum(),
+		)
+
 		cmdArgs := []string{
 			"cp",
 			"-R",
@@ -235,8 +248,9 @@ func (launcher *TekuCLClientLauncher) getContainerConfigSupplier(
 			"--p2p-subscribe-all-subnets-enabled=true",
 			fmt.Sprintf("--p2p-peer-lower-bound=%v", minPeers),
 			"--eth1-endpoints=" + elClientRpcUrlStr,
-			"--Xee-endpoint=" + elClientRpcUrlStr,
+			"--ee-endpoint=" + execClientRpcUrlStr,
 			"--p2p-advertised-ip=" + privateIpAddr,
+			fmt.Sprintf("--ee-jwt-secret-file=%s", jwtPath),
 			"--rest-api-enabled=true",
 			"--rest-api-docs-enabled=true",
 			"--rest-api-interface=0.0.0.0",
@@ -248,7 +262,7 @@ func (launcher *TekuCLClientLauncher) getContainerConfigSupplier(
 				destValidatorKeysDirpathInServiceContainer,
 				destValidatorSecretsDirpathInServiceContainer,
 			),
-			"--Xvalidators-proposer-default-fee-recipient=" + validatingRewardsAccount,
+			"--validators-proposer-default-fee-recipient=" + validatingRewardsAccount,
 			// vvvvvvvvvvvvvvvvvvv METRICS CONFIG vvvvvvvvvvvvvvvvvvvvv
 			"--metrics-enabled",
 			"--metrics-interface=" + privateIpAddr,

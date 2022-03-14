@@ -1,9 +1,12 @@
 package static_files
 
 import (
-	"github.com/kurtosis-tech/stacktrace"
 	"path"
 	"text/template"
+
+	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/service_launch_utils"
+	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/services"
+	"github.com/kurtosis-tech/stacktrace"
 )
 
 const (
@@ -31,8 +34,30 @@ const (
 	GrafanaDatasourceConfigTemplateFilepath         = staticFilesDirpath + grafanaConfigDirpath + "/datasource.yml.tmpl"
 	GrafanaDashboardsConfigDirpath                  = staticFilesDirpath + grafanaConfigDirpath + "/dashboards"
 	GrafanaDashboardProvidersConfigTemplateFilepath = GrafanaDashboardsConfigDirpath + "/dashboard-providers.yml.tmpl"
-	GrafanaDashboardConfigFilepath = GrafanaDashboardsConfigDirpath + "/dashboard.json"
+	GrafanaDashboardConfigFilepath                  = GrafanaDashboardsConfigDirpath + "/dashboard.json"
+
+	//JWT config
+	JWTSecretsDirpath = "/jwt-config"
+	JWTSecretFilename = "jwt.secret"
+	JWTSecretFilepath = staticFilesDirpath + JWTSecretsDirpath + "/" + JWTSecretFilename
 )
+
+func CopyJWTFileToSharedDir(
+	sharedPath *services.SharedPath,
+) (string, error) {
+
+	jwtSecretSharedPath := sharedPath.GetChildPath(JWTSecretFilename)
+
+	if err := service_launch_utils.CopyFileToSharedPath(JWTSecretFilepath, jwtSecretSharedPath); err != nil {
+		return "", stacktrace.Propagate(
+			err,
+			"An error occurred copying JWT secret file from '%v' into path '%v'",
+			JWTSecretFilepath,
+			jwtSecretSharedPath,
+		)
+	}
+	return jwtSecretSharedPath.GetAbsPathOnServiceContainer(), nil
+}
 
 func ParseTemplate(filepath string) (*template.Template, error) {
 	tmpl, err := template.New(

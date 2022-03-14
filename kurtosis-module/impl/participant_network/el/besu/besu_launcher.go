@@ -1,6 +1,10 @@
 package besu
+
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/module_io"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/el"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/el/el_rest_client"
@@ -9,8 +13,6 @@ import (
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/enclaves"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/services"
 	"github.com/kurtosis-tech/stacktrace"
-	"strings"
-	"time"
 )
 
 const (
@@ -26,6 +28,8 @@ const (
 
 	rpcPortNum       uint16 = 8545
 	wsPortNum        uint16 = 8546
+	authRpcPortNum   uint16 = 8550
+	authWsPortNum    uint16 = 8551
 	discoveryPortNum uint16 = 30303
 
 	// Port IDs
@@ -37,6 +41,7 @@ const (
 	getNodeInfoMaxRetries         = 20
 	getNodeInfoTimeBetweenRetries = 1 * time.Second
 )
+
 var usedPorts = map[string]*services.PortSpec{
 	rpcPortId:          services.NewPortSpec(rpcPortNum, services.PortProtocol_TCP),
 	wsPortId:           services.NewPortSpec(wsPortNum, services.PortProtocol_TCP),
@@ -55,7 +60,7 @@ var besuLogLevels = map[module_io.GlobalClientLogLevel]string{
 
 type BesuELClientLauncher struct {
 	genesisJsonFilepathOnModuleContainer string
-	networkId string
+	networkId                            string
 }
 
 func NewBesuELClientLauncher(genesisJsonFilepathOnModuleContainer string, networkId string) *BesuELClientLauncher {
@@ -106,13 +111,14 @@ func (launcher *BesuELClientLauncher) Launch(
 		nodeInfo.Enode,
 		serviceCtx.GetPrivateIPAddress(),
 		rpcPortNum,
+		authRpcPortNum,
 		wsPortNum,
+		authWsPortNum,
 		miningWaiter,
 	)
 
 	return result, nil
 }
-
 
 // ====================================================================================================
 //                                       Private Helper Methods
@@ -139,8 +145,8 @@ func (launcher *BesuELClientLauncher) getContainerConfigSupplier(
 			"--network-id=" + networkId,
 			"--host-allowlist=*",
 			"--Xmerge-support=true",
-			"--miner-enabled=true",
-			"--miner-coinbase=" + miningRewardsAccount,
+			// "--miner-enabled=true",
+			// "--miner-coinbase=" + miningRewardsAccount,
 			"--rpc-http-enabled=true",
 			"--rpc-http-host=0.0.0.0",
 			fmt.Sprintf("--rpc-http-port=%v", rpcPortNum),
@@ -157,7 +163,7 @@ func (launcher *BesuELClientLauncher) getContainerConfigSupplier(
 		if bootnodeContext != nil {
 			launchNodeCmdArgs = append(
 				launchNodeCmdArgs,
-				"--bootnodes=" + bootnodeContext.GetEnode(),
+				"--bootnodes="+bootnodeContext.GetEnode(),
 			)
 		}
 		if len(extraParams) > 0 {

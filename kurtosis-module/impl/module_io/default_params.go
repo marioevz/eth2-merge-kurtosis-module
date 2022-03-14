@@ -7,15 +7,15 @@ const (
 	useDefaultElImageKeyword = ""
 	useDefaultClImageKeyword = ""
 
-	unspecifiedLogLevel                 = ""
+	unspecifiedLogLevel = ""
 )
 
 var defaultElImages = map[ParticipantELClientType]string{
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//       If you change these in any way, modify the example JSON config in the README to reflect this!
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	ParticipantELClientType_Geth:       "parithoshj/geth:merge-371a525", // From around 2022-03-03
-	ParticipantELClientType_Nethermind: "nethermindeth/nethermind:kintsugi_0.5",
+	ParticipantELClientType_Geth:       "parithoshj/geth:merge-876ca42", // From around 2022-03-03
+	ParticipantELClientType_Nethermind: "nethermindeth/nethermind:kiln_0.6",
 	ParticipantELClientType_Besu:       "hyperledger/besu:merge",
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//       If you change these in any way, modify the example JSON config in the README to reflect this!
@@ -65,6 +65,7 @@ func GetDefaultExecuteParams() *ExecuteParams {
 			TotalTerminalDifficulty:            100000000,
 			NumValidatorKeysPerNode:            64,
 			PreregisteredValidatorKeysMnemonic: "giant issue aisle success illegal bike spike question tent bar rely arctic volcano long crawl hungry vocal artwork sniff fantasy very lucky have athlete",
+			JWTSecret:                          "0x7365637265747365637265747365637265747365637265747365637265747365",
 		},
 		WaitForMining:       true,
 		WaitForFinalization: false,
@@ -82,7 +83,7 @@ func GetClientLogLevelStrOrDefault(participantLogLevel string, globalLogLevel Gl
 
 	var (
 		logLevel = participantLogLevel
-		found bool
+		found    bool
 	)
 
 	if logLevel == unspecifiedLogLevel {

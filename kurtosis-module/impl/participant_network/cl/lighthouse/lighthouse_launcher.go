@@ -2,17 +2,19 @@ package lighthouse
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/module_io"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/cl"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/cl/cl_client_rest_client"
 	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/participant_network/el"
 	cl2 "github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/prelaunch_data_generator/cl_validator_keystores"
+	"github.com/kurtosis-tech/eth2-merge-kurtosis-module/kurtosis-module/impl/static_files"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/enclaves"
 	"github.com/kurtosis-tech/kurtosis-core-api-lib/api/golang/lib/services"
 	"github.com/kurtosis-tech/stacktrace"
 	recursive_copy "github.com/otiai10/copy"
-	"os"
-	"time"
 )
 
 const (
@@ -42,10 +44,10 @@ const (
 	validatorKeysRelDirpathInSharedDir    = "validator-keys"
 	validatorSecretsRelDirpathInSharedDir = "validator-secrets"
 
-	validatorHttpPortID    = "http"
-	validatorMetricsPortID = "metrics"
-	validatorHttpPortNum   = 5042
-	validatorMetricsPortNum   = 5064
+	validatorHttpPortID     = "http"
+	validatorMetricsPortID  = "metrics"
+	validatorHttpPortNum    = 5042
+	validatorMetricsPortNum = 5064
 
 	metricsPath = "/metrics"
 
@@ -60,7 +62,7 @@ var beaconUsedPorts = map[string]*services.PortSpec{
 	beaconMetricsPortID:      services.NewPortSpec(beaconMetricsPortNum, services.PortProtocol_TCP),
 }
 var validatorUsedPorts = map[string]*services.PortSpec{
-	validatorHttpPortID: services.NewPortSpec(validatorHttpPortNum, services.PortProtocol_TCP),
+	validatorHttpPortID:    services.NewPortSpec(validatorHttpPortNum, services.PortProtocol_TCP),
 	validatorMetricsPortID: services.NewPortSpec(validatorMetricsPortNum, services.PortProtocol_TCP),
 }
 var lighthouseLogLevels = map[module_io.GlobalClientLogLevel]string{
@@ -197,6 +199,17 @@ func (launcher *LighthouseCLClientLauncher) getBeaconContainerConfigSupplier(
 			)
 		}
 
+		jwtPath, err := static_files.CopyJWTFileToSharedDir(sharedDir)
+		if err != nil {
+			return nil, err
+		}
+
+		execClientRpcUrlStr := fmt.Sprintf(
+			"http://%v:%v",
+			elClientCtx.GetIPAddress(),
+			elClientCtx.GetAuthRPCPortNum(),
+		)
+
 		elClientRpcUrlStr := fmt.Sprintf(
 			"http://%v:%v",
 			elClientCtx.GetIPAddress(),
@@ -230,13 +243,14 @@ func (launcher *LighthouseCLClientLauncher) getBeaconContainerConfigSupplier(
 			"--http",
 			"--http-address=0.0.0.0",
 			fmt.Sprintf("--http-port=%v", beaconHttpPortNum),
+			fmt.Sprintf("--jwt-secrets=%s", jwtPath),
 			"--merge",
 			"--http-allow-sync-stalled",
 			// NOTE: This comes from:
 			//   https://github.com/sigp/lighthouse/blob/7c88f582d955537f7ffff9b2c879dcf5bf80ce13/scripts/local_testnet/beacon_node.sh
 			// and the option says it's "useful for testing in smaller networks" (unclear what happens in larger networks)
 			"--disable-packet-filter",
-			"--execution-endpoints=" + elClientRpcUrlStr,
+			"--execution-endpoints=" + execClientRpcUrlStr,
 			"--eth1-endpoints=" + elClientRpcUrlStr,
 			// Set per Paris' recommendation to reduce noise in the logs
 			"--subscribe-all-subnets",
